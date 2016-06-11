@@ -68,5 +68,18 @@ public class Main {
                 }
         );
 
+        Spark.post(
+                "/delete",
+                (request, response) -> {
+                    Session session = request.session();
+                    String name = session.attribute("username");
+                    User user = users.get(name);
+                    int id = Integer.valueOf(request.queryParams("ID"));
+                    user.toDoItemText.remove(id-1);
+                    response.redirect("/");
+                    return "";
+                }
+        );
+
     }
 }

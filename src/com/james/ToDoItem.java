@@ -5,9 +5,10 @@ package com.james;
  */
 public class ToDoItem {
     String listText;
+    int id;
 
-
-    public ToDoItem(String listText) {
+    public ToDoItem(String listText, int id) {
         this.listText = listText;
+        this.id = id;
     }
 }
