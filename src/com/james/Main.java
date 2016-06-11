@@ -1,5 +1,6 @@
 package com.james;
 
+import com.sun.org.apache.xpath.internal.operations.Mod;
 import spark.ModelAndView;
 import spark.Session;
 import spark.Spark;
@@ -62,7 +63,8 @@ public class Main {
                     String name = session.attribute("username");
                     User user = users.get(name);
                     String list = request.queryParams("listText");
-                    user.toDoItemText.add(new ToDoItem(list));
+                    ToDoItem item = new ToDoItem(list, user.toDoItemText.size());
+                    user.toDoItemText.add(item);
                     response.redirect("/");
                     return "";
                 }
@@ -75,10 +77,30 @@ public class Main {
                     String name = session.attribute("username");
                     User user = users.get(name);
                     int id = Integer.valueOf(request.queryParams("ID"));
-                    user.toDoItemText.remove(id-1);
+                    user.toDoItemText.remove(id);
                     response.redirect("/");
                     return "";
                 }
+        );
+
+        Spark.post(
+                "/logout",
+                (request, response) -> {
+                    Session session = request.session();
+                    session.invalidate();
+                    response.redirect("/");
+                    return "";
+                }
+        );
+        Spark.get(
+                "/edit",
+                (request, response) -> {
+                    Session session = request.session();
+                    String name = session.attribute("username");
+                    User user = users.get(name);
+                    return new ModelAndView(user,"edit.html");
+                },
+                new MustacheTemplateEngine()
         );
 
     }
