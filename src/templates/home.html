@@ -27,10 +27,12 @@
                     <input type="hidden" name="ID" value="{{id}}"/>
                     <button type="submit">Delete</button>
                 </form>
+                <form action="/edit-item" method="post">
+                    <input type="hidden" name="ID" value="id"/>
+                    <a href="/edit">Edit List</a>
+                </form>
             </li>
         {{/listItems}}
         </ol>
-
-    <a href="/edit">Edit List</a>
     </body>
 </html>

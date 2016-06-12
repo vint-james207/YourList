@@ -103,7 +103,7 @@ public class Main {
                 }
         );
         Spark.get(
-                "/edit",
+                "/edit-item",
                 (request, response) -> {
                     Session session = request.session();
                     String name = session.attribute("username");
