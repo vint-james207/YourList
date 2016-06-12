@@ -18,15 +18,19 @@
         <br>
         <br>
         {{name}}'s To-Do List:
+
         <ol>
         {{#listItems}}
-            <li>{{listText}}</li>
+            <li>
+                {{listText}}
+                <form action="/delete" method="post">
+                    <input type="hidden" name="ID" value="{{id}}"/>
+                    <button type="submit">Delete</button>
+                </form>
+            </li>
         {{/listItems}}
         </ol>
-        <form action="/delete" method="post">
-            <input type="hidden" name="ID" value="{{id}}"/>
-            <button type="submit">Delete</button>
-    </form>
+
     <a href="/edit">Edit List</a>
     </body>
 </html>

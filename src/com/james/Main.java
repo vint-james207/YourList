@@ -73,11 +73,21 @@ public class Main {
         Spark.post(
                 "/delete",
                 (request, response) -> {
+                    int id = Integer.valueOf(request.queryParams("ID"));
                     Session session = request.session();
                     String name = session.attribute("username");
                     User user = users.get(name);
-                    int id = Integer.valueOf(request.queryParams("ID"));
+                    if (name == null) {
+                        throw new Exception("You must log in to make changes");
+                    }
+
                     user.toDoItemText.remove(id);
+
+                    int index = 0;
+                    for (ToDoItem item : user.toDoItemText) {
+                        item.setId(index);
+                        index++;
+                    }
                     response.redirect("/");
                     return "";
                 }
@@ -98,9 +108,27 @@ public class Main {
                     Session session = request.session();
                     String name = session.attribute("username");
                     User user = users.get(name);
+                    HashMap map = new HashMap();
+                    int id = (Integer.valueOf(request.queryParams("ID")));
+                    ToDoItem item = user.toDoItemText.get(id);
+                    map.put("ListItem", item);
+
                     return new ModelAndView(user,"edit.html");
                 },
                 new MustacheTemplateEngine()
+        );
+        Spark.post(
+                "/edit-item",
+                (request, response) -> {
+                    Session session = request.session();
+                    String name = session.attribute("username");
+                    User user = users.get(name);
+                    int id = (Integer.valueOf(request.queryParams("ID")));
+                    ToDoItem item = user.toDoItemText.get(id);
+                    item.setListText(request.queryParams("UpdateItem"));
+                    response.redirect("/");
+                    return "";
+                }
         );
 
     }
