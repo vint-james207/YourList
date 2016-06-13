@@ -5,12 +5,12 @@
     <title>EditPage</title>
 </head>
 <body>
-{{#item}}
+{{#ListItem}}
 <form action="/edit-item" method="post">
-    <input type="text" value="{{list.listText" name="UpdateItem" placeholder="Update Item"/>
-    <input type="hidden" name="ID" value="{{item.id}}"/>
+    <input type="text" value="{{listItem}}" name="UpdateItem" placeholder="Update Item"/>
+    <input type="hidden" name="ID" value="{{id}}"/>
     <button type="submit">Update Item</button>
 </form>
-{{/item}}
+{{/ListItem}}
 </body>
 </html>

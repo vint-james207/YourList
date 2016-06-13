@@ -113,7 +113,7 @@ public class Main {
                     ToDoItem item = user.toDoItemText.get(id);
                     map.put("ListItem", item);
 
-                    return new ModelAndView(user,"edit.html");
+                    return new ModelAndView(map,"edit.html");
                 },
                 new MustacheTemplateEngine()
         );
