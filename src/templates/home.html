@@ -26,11 +26,9 @@
                 <form action="/delete" method="post">
                     <input type="hidden" name="ID" value="{{id}}"/>
                     <button type="submit">Delete</button>
+
                 </form>
-                <form action="/edit-item" method="post">
-                    <input type="hidden" name="ID" value="id"/>
-                    <a href=“/edit-item?ID={{id}}">Edit List</a>
-                </form>
+                <a href=“/edit-item?ID={{id}}">Edit List</a>
             </li>
         {{/listItems}}
         </ol>
