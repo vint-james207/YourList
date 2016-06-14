@@ -9,13 +9,12 @@ public class User {
     int id;
     String name;
     String password;
-    ArrayList<ToDoItem> toDoItemText;
+
 
     public User(int id, String name, String password) {
         this.id = id;
         this.name = name;
         this.password = password;
-        toDoItemText = new ArrayList<>();
     }
 
     public User(String name, String password) {
@@ -37,13 +36,5 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public ArrayList<ToDoItem> getToDoItemText() {
-        return toDoItemText;
-    }
-
-    public void setToDoItemText(ArrayList<ToDoItem> toDoItemText) {
-        this.toDoItemText = toDoItemText;
     }
 }

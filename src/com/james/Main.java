@@ -54,8 +54,34 @@ public class Main {
         return null;
     }
 
+    public static ArrayList<ToDoItem> selectEntries(Connection conn, int id) throws SQLException {
+        ArrayList<ToDoItem> listItems = new ArrayList<>();
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM todoList INNER JOIN users ON todoList.user_id = users.id WHERE users.id =?");
+        stmt.setInt(1, id);
+        ResultSet results = stmt.executeQuery();
+        while (results.next()) {
+            String listText = results.getString("todoList.listText");
+            ToDoItem item = new ToDoItem(id, listText);
+            listItems.add(item);
+        }
+        return listItems;
+    }
 
-    static HashMap<String, User> users = new HashMap<>();
+    public static void updateEntries(Connection conn, int id, String listText) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("UPDATE todoList SET listText = ? WHERE id = ?");
+        stmt.setString(1, listText);
+        stmt.setInt(2, id);
+        stmt.execute();
+    }
+
+    public static void deleteEntries(Connection conn, int id) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("DELETE FROM todoList WHERE id = ?");
+        stmt.setInt(1, id);
+        stmt.execute();
+    }
+
+
+
 
     public static void main(String[] args) throws SQLException {
         Server.createWebServer().start();
@@ -72,12 +98,12 @@ public class Main {
                     HashMap map = new HashMap();
                     Session session = request.session();
                     String name = session.attribute("username");
-                    User user = users.get(name);
+                    User user = selectUser(conn, name);
                     if (user == null) {
                         return new ModelAndView(map, "login.html");
                     }
                     else {
-                        map.put("listItems", user.toDoItemText);
+                        map.put("listItems", selectEntries(conn, user.id));
                         map.put("name", user.name);
                         return  new ModelAndView(map, "home.html");
                     }
@@ -90,10 +116,10 @@ public class Main {
                 (request, response) -> {
                     String name = request.queryParams("username");
                     String password = request.queryParams("password");
-                    User user = users.get(name);
+                    User user = selectUser(conn, name);
                     if (user == null) {
                         user = new User(name, password);
-                        users.put(name, user);
+                        selectUser(conn, name);
                     }
                     if (password.equals(user.password)) {
                         Session session = request.session();
@@ -110,10 +136,10 @@ public class Main {
                 (request, response) -> {
                     Session session = request.session();
                     String name = session.attribute("username");
-                    User user = users.get(name);
+                    User user = selectUser(conn, name);
                     String list = request.queryParams("listText");
-                    ToDoItem item = new ToDoItem(user.toDoItemText.size(), list);
-                    user.toDoItemText.add(item);
+                    ToDoItem item = selectEntry(conn, user.id);
+                    insertList(conn, user.id, list);
                     response.redirect("/");
                     return "";
                 }
@@ -125,18 +151,11 @@ public class Main {
                     int id = Integer.valueOf(request.queryParams("ID"));
                     Session session = request.session();
                     String name = session.attribute("username");
-                    User user = users.get(name);
+                    User user = selectUser(conn, name);
                     if (name == null) {
                         throw new Exception("You must log in to make changes");
                     }
-
-                    user.toDoItemText.remove(id);
-
-                    int index = 0;
-                    for (ToDoItem item : user.toDoItemText) {
-                        item.setId(index);
-                        index++;
-                    }
+                    deleteEntries(conn, user.id);
                     response.redirect("/");
                     return "";
                 }
@@ -156,10 +175,10 @@ public class Main {
                 (request, response) -> {
                     Session session = request.session();
                     String name = session.attribute("username");
-                    User user = users.get(name);
+                    User user = selectUser(conn, name);
                     HashMap map = new HashMap();
                     int id = (Integer.valueOf(request.queryParams("ID")));
-                    ToDoItem item = user.toDoItemText.get(id);
+                    ToDoItem item = selectEntry(conn, id);
                     map.put("ListItem", item);
 
                     return new ModelAndView(map,"edit.html");
@@ -171,9 +190,9 @@ public class Main {
                 (request, response) -> {
                     Session session = request.session();
                     String name = session.attribute("username");
-                    User user = users.get(name);
+                    User user = selectUser(conn, name);
                     int id = (Integer.valueOf(request.queryParams("ID")));
-                    ToDoItem item = user.toDoItemText.get(id);
+                    ToDoItem item = updateEntries(conn, id, );
                     item.setListText(request.queryParams("UpdateItem"));
                     response.redirect("/");
                     return "";
