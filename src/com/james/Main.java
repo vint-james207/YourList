@@ -1,18 +1,67 @@
 package com.james;
-
-import com.sun.org.apache.xpath.internal.operations.Mod;
+import org.h2.tools.Server;
 import spark.ModelAndView;
 import spark.Session;
 import spark.Spark;
 import spark.template.mustache.MustacheTemplateEngine;
 
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Main {
 
+    public static void createTables(Connection conn) throws SQLException {
+        Statement stmt = conn.createStatement();
+        stmt.execute("CREATE TABLE IF NOT EXISTS users (id IDENTITY, name VARCHAR, password VARCHAR)");
+        stmt.execute("CREATE TABLE IF NOT EXISTS todoList (id IDENTITY, user_id INT, listText VARCHAR)");
+    }
+
+    public static void insertUser(Connection conn, String name, String password) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("INSERT INTO users VALUES (NULL, ?, ?)");
+        stmt.setString(1, name);
+        stmt.setString(2, password);
+        stmt.execute();
+    }
+
+    public static User selectUser(Connection conn, String name) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM users WHERE name = ?");
+        stmt.setString(1, name);
+        ResultSet results = stmt.executeQuery();
+        if (results.next()) {
+            int id = results.getInt("id");
+            String password = results.getString("password");
+            return new User(id, name, password);
+        }
+        return null;
+    }
+
+    public static void insertList(Connection conn, int id, String listText) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("INSERT INTO todoList VALUES (NULL, ?, ?)");
+        stmt.setInt(1, id);
+        stmt.setString(2, listText);
+        stmt.execute();
+    }
+
+    public static ToDoItem selectEntry(Connection conn, int id) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM todoList INNER JOIN users ON todoList.user_id = users.id WHERE todoList.id = ?");
+        stmt.setInt(1, id);
+        ResultSet results = stmt.executeQuery();
+        if (results.next()) {
+            String listText = results.getString("todoList.listText");
+            return new ToDoItem(id, listText);
+        }
+        return null;
+    }
+
+
     static HashMap<String, User> users = new HashMap<>();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
+        Server.createWebServer().start();
+        Connection conn = DriverManager.getConnection("jdbc:h2:./main");
+        createTables(conn);
+
         Spark.staticFileLocation("Public");
 
         Spark.init();
@@ -63,7 +112,7 @@ public class Main {
                     String name = session.attribute("username");
                     User user = users.get(name);
                     String list = request.queryParams("listText");
-                    ToDoItem item = new ToDoItem(list, user.toDoItemText.size());
+                    ToDoItem item = new ToDoItem(user.toDoItemText.size(), list);
                     user.toDoItemText.add(item);
                     response.redirect("/");
                     return "";

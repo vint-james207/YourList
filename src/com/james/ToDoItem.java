@@ -4,8 +4,9 @@ package com.james;
  * Created by jamesyburr on 6/10/16.
  */
 public class ToDoItem {
-    String listText;
     int id;
+    String listText;
+
 
     public String getListText() {
         return listText;
@@ -23,9 +24,10 @@ public class ToDoItem {
         this.id = id;
     }
 
-    public ToDoItem(String listText, int id) {
-        this.listText = listText;
+    public ToDoItem(int id, String listText) {
         this.id = id;
+        this.listText = listText;
+
 
 
     }
