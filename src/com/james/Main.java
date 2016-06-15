@@ -36,47 +36,48 @@ public class Main {
         return null;
     }
 
-    public static void insertList(Connection conn, int id, String listText) throws SQLException {
+    public static void insertList(Connection conn, int userId, String listText) throws SQLException {
         PreparedStatement stmt = conn.prepareStatement("INSERT INTO todoList VALUES (NULL, ?, ?)");
-        stmt.setInt(1, id);
+        stmt.setInt(1, userId);
         stmt.setString(2, listText);
         stmt.execute();
     }
 
-    public static ToDoItem selectEntry(Connection conn, int id) throws SQLException {
+    public static ToDoItem selectEntry(Connection conn, int itemId) throws SQLException {
         PreparedStatement stmt = conn.prepareStatement("SELECT * FROM todoList INNER JOIN users ON todoList.user_id = users.id WHERE todoList.id = ?");
-        stmt.setInt(1, id);
+        stmt.setInt(1, itemId);
         ResultSet results = stmt.executeQuery();
         if (results.next()) {
             String listText = results.getString("todoList.listText");
-            return new ToDoItem(id, listText);
+            return new ToDoItem(itemId, listText);
         }
         return null;
     }
 
-    public static ArrayList<ToDoItem> selectEntries(Connection conn, int id) throws SQLException {
+    public static ArrayList<ToDoItem> selectEntries(Connection conn, int userId) throws SQLException {
         ArrayList<ToDoItem> listItems = new ArrayList<>();
         PreparedStatement stmt = conn.prepareStatement("SELECT * FROM todoList INNER JOIN users ON todoList.user_id = users.id WHERE users.id =?");
-        stmt.setInt(1, id);
+        stmt.setInt(1, userId);
         ResultSet results = stmt.executeQuery();
         while (results.next()) {
+            int itemId = results.getInt("todoList.id");
             String listText = results.getString("todoList.listText");
-            ToDoItem item = new ToDoItem(id, listText);
+            ToDoItem item = new ToDoItem(itemId, listText);
             listItems.add(item);
         }
         return listItems;
     }
 
-    public static void updateEntries(Connection conn, int id, String listText) throws SQLException {
+    public static void updateEntries(Connection conn, int itemId, String listText) throws SQLException {
         PreparedStatement stmt = conn.prepareStatement("UPDATE todoList SET listText = ? WHERE id = ?");
         stmt.setString(1, listText);
-        stmt.setInt(2, id);
+        stmt.setInt(2, itemId);
         stmt.execute();
     }
 
-    public static void deleteEntries(Connection conn, int id) throws SQLException {
+    public static void deleteEntries(Connection conn, int itemId) throws SQLException {
         PreparedStatement stmt = conn.prepareStatement("DELETE FROM todoList WHERE id = ?");
-        stmt.setInt(1, id);
+        stmt.setInt(1, itemId);
         stmt.execute();
     }
 
@@ -98,11 +99,11 @@ public class Main {
                     HashMap map = new HashMap();
                     Session session = request.session();
                     String name = session.attribute("username");
-                    User user = selectUser(conn, name);
-                    if (user == null) {
+                    if (name == null) {
                         return new ModelAndView(map, "login.html");
                     }
                     else {
+                        User user = selectUser(conn, name);
                         map.put("listItems", selectEntries(conn, user.id));
                         map.put("name", user.name);
                         return  new ModelAndView(map, "home.html");
@@ -118,13 +119,14 @@ public class Main {
                     String password = request.queryParams("password");
                     User user = selectUser(conn, name);
                     if (user == null) {
-                        user = new User(name, password);
-                        selectUser(conn, name);
+                        insertUser(conn, name, password);
                     }
-                    if (password.equals(user.password)) {
-                        Session session = request.session();
-                        session.attribute("username", name);
+                    else if (!password.equals(user.password)) {
+                        throw new Exception("Wrong password!");
                     }
+
+                    Session session = request.session();
+                    session.attribute("username", name);
 
                     response.redirect("/");
                     return "";
@@ -137,8 +139,10 @@ public class Main {
                     Session session = request.session();
                     String name = session.attribute("username");
                     User user = selectUser(conn, name);
+                    if (name == null) {
+                        throw new Exception("Not logged in!");
+                    }
                     String list = request.queryParams("listText");
-                    ToDoItem item = selectEntry(conn, user.id);
                     insertList(conn, user.id, list);
                     response.redirect("/");
                     return "";
@@ -155,7 +159,7 @@ public class Main {
                     if (name == null) {
                         throw new Exception("You must log in to make changes");
                     }
-                    deleteEntries(conn, user.id);
+                    deleteEntries(conn, id);
                     response.redirect("/");
                     return "";
                 }
@@ -192,8 +196,8 @@ public class Main {
                     String name = session.attribute("username");
                     User user = selectUser(conn, name);
                     int id = (Integer.valueOf(request.queryParams("ID")));
-                    ToDoItem item = updateEntries(conn, id, );
-                    item.setListText(request.queryParams("UpdateItem"));
+                    String text = request.queryParams("UpdateItem");
+                    updateEntries(conn, id, text);
                     response.redirect("/");
                     return "";
                 }
